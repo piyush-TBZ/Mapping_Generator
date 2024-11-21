@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Filtering Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #e44444;
+            --primary-hover: #ce0101;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #634b4b;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.5;
+            color: var(--gray-800);
+            background-color: var(--gray-100);
+        }
+
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--gray-200);
+            border-bottom-color: var(--primary-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        .loader-text {
+            position: absolute;
+            margin-top: 80px;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            color: var(--primary-color);
+        }
+
+        .logo2 {
+            width: 130px;
+            height: 60px;
+            margin-left: 1rem;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .page-header {
+            padding: 2rem 0;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: var(--gray-800);
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin: 1rem 0;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--gray-800);
+            margin-bottom: 1rem;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--gray-300);
+            border-radius: 6px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            color: var(--gray-600);
+        }
+
+        .upload-text {
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .upload-link:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            margin-bottom: 0.5rem;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            min-height: 42px;
+            padding: 4px 8px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--multiple {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            border-radius: 9999px;
+            padding: 2px 8px;
+            margin: 2px;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white;
+            margin-right: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s ease;
+        }
+
+        .checkbox-wrapper:hover {
+            transform: translateX(4px);
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .file-status {
+            margin: 1.5rem 0;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #4CAF50;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .file-status p {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .file-status span {
+            font-weight: 600;
+            color: #2c3e50;
+            padding: 0.25rem 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        /* Error State */
+        .file-status.error {
+            background: #fff5f5;
+            border-left-color: #dc3545;
+            color: #842029;
+        }
+
+        .file-status.error span {
+            color: #842029;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        /* Hover Effects */
+        .file-status:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        /* Optional: Animation for appearing */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-status {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @media (max-width: 768px) {
+            .checkbox-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader-overlay">
+        <div class="loader"></div>
+        <div class="loader-text">Processing your file...</div>
+    </div>
+    <nav class="navbar">
+        <div class="container">
+            <!-- <svg class="logo" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg> -->
+            <img src="/static/images.png" class="logo2">
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="page-header">
+            <h1>Mapping File Generator</h1>
+        </header>
+
+        <!-- Display file status -->
+        <div class="file-status {% if not file_status.exists %}error{% endif %}">
+            {% if file_status.exists %}
+            <p>The file being processed is: <span>{{ file_status.file_name }}</span>.</p>
+            {% else %}
+            <p>No file found in the folder <span>master</span>. Please ensure <span>master.csv</span> exists in the
+                folder.</p>
+            {% endif %}
+        </div>
+
+
+        <main>
+            <div class="card">
+                <form action="/process" method="post" enctype="multipart/form-data">
+                    <!-- File Upload Section
+                    <div class="form-section">
+                        <h3>Upload File</h3>
+                        <div class="upload-zone" id="upload-zone">
+                            <svg class="upload-icon" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p class="upload-text">
+                                <span class="upload-link">Upload a file</span> or drag and drop
+                            </p>
+                            <p class="upload-text" style="font-size: 0.75rem;">CSV files only</p>
+                            <input type="file" id="file" name="file" class="hidden" required>
+                        </div>
+                    </div> -->
+
+                    <!-- Filter Options Section -->
+                    <div class="form-section">
+                        <h3>Filter Options</h3>
+                        <div class="form-group">
+                            <label for="country_filter">Countries</label>
+                            <select name="country_filter" id="country_filter" multiple="multiple">
+                                {% for country in countries %}
+                                <option value="{{ country }}">{{ country }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="city_filter">Cities</label>
+                            <select name="city_filter" id="city_filter" multiple="multiple">
+                                <option value="">Type to search...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rating_filter">Ratings</label>
+                            <select name="rating_filter" id="rating_filter" multiple="multiple">
+                                <option value="1">1 Star</option>
+                                <option value="2">2 Stars</option>
+                                <option value="3">3 Stars</option>
+                                <option value="4">4 Stars</option>
+                                <option value="5">5 Stars</option>
+                            </select>
+                        </div>
+                        
+
+                        <div class="checkbox-group">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="is_oth_filter" id="is_oth_filter">
+                                <label for="is_oth_filter">"Filter: isOTH</label>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="top_selling_filter" id="top_selling_filter">
+                                <label for="top_selling_filter">Filter: Top Selling</label>
+                            </div>
+
+                            <!-- New functionality -->
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="on_top_oth_filter" id="on_top_oth_filter">
+                                <label for="on_top_oth_filter">Include All isOTH</label>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="on_top_top_selling_filter" id="on_top_top_selling_filter">
+                                <label for="on_top_top_selling_filter">Include All Top Selling</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Optional Columns Section -->
+                    <div class="form-section">
+                        <h3>Optional Columns</h3>
+                        <div class="checkbox-group">
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="include_ean" id="include_ean">
+                                <label for="include_ean">Include EAN</label>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="include_agoda" id="include_agoda">
+                                <label for="include_agoda">Include AGODA</label>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="include_ean_agoda" id="include_ean_agoda">
+                                <label for="include_ean_agoda">Include EAN and AGODA</label>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="include_travelgate" id="include_travelgate">
+                                <label for="include_travelgate">Include Travelgate</label>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" name="include_unicaid" id="include_unicaid">
+                                <label for="include_unicaid">Include UnicaID</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary">Process and Download</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2 for country and city filters
+            $('#country_filter').select2({
+                placeholder: "Select countries",
+                allowClear: true
+            });
+
+            $('#city_filter').select2({
+                ajax: {
+                    url: '/get_cities_by_letter',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: function (params) {
+                        return JSON.stringify({
+                            search_term: params.term
+                        });
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.cities.map(city => ({
+                                id: city,
+                                text: city
+                            }))
+                        };
+                    },
+                    delay: 250
+                },
+                placeholder: "Type to search cities...",
+                minimumInputLength: 1,
+                allowClear: true
+            });
+            $('#rating_filter').select2({
+                placeholder: "Select ratings",
+                allowClear: true
+            });
+
+            // Add loader logic for form submission
+            $('form').on('submit', function (e) {
+                e.preventDefault(); // Prevent default form submission
+                $('.loader-overlay').css('display', 'flex'); // Show loader
+
+                fetch('/process', {
+                    method: 'POST',
+                    body: new URLSearchParams(new FormData(this)) // Send form data
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        // Trigger download
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = 'filtered_data.csv';
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while processing your file. Please try again.');
+                    })
+                    .finally(() => {
+                        $('.loader-overlay').hide(); // Hide loader
+                    });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
